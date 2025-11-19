@@ -465,6 +465,51 @@
       display: none;
     }
 
+    .level-complete {
+      background: linear-gradient(135deg, #020617, #020617, #111827);
+      border-radius: 16px;
+      border: 1px solid rgba(129,140,248,0.25);
+      box-shadow: 0 10px 35px rgba(0,0,0,0.5);
+      padding: 16px;
+      color: #e5e7eb;
+      width: min(720px, 96vw);
+      max-height: 90vh;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .confetti-piece {
+      position: fixed;
+      top: -10px;
+      width: 8px;
+      height: 14px;
+      opacity: 0.9;
+      border-radius: 2px;
+      will-change: transform;
+      animation-name: confetti-fall, confetti-tilt;
+      animation-timing-function: linear, ease-in-out;
+      animation-fill-mode: forwards;
+    }
+    @keyframes confetti-fall {
+      to { transform: translateY(105vh) rotate(720deg); opacity: 1; }
+    }
+    @keyframes confetti-tilt {
+      0% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(52vh) rotate(360deg); }
+      100% { transform: translateY(105vh) rotate(720deg); }
+    }
+    .shake {
+      animation: shake 0.4s;
+    }
+    @keyframes shake {
+      10%, 90% { transform: translateX(-1px); }
+      20%, 80% { transform: translateX(2px); }
+      30%, 50%, 70% { transform: translateX(-4px); }
+      40%, 60% { transform: translateX(4px); }
+    }
+
     .level-menu {
       background: linear-gradient(135deg, #020617, #020617, #111827);
       border-radius: 16px;
@@ -697,7 +742,6 @@
           <button class="secondary" onclick="openLevelMenu()">Mapa de niveles</button>
           <button class="secondary" onclick="toggleGlosario()">Ayuda / Glosario</button>
         </div>
-        <button class="icon-btn" id="musicToggleBtn" onclick="toggleMusic()" title="Música">🔇</button>
       </div>
     </div>
 
@@ -785,6 +829,10 @@
       </p>
       <div class="levels-grid" id="levelMenuGrid"></div>
     </div>
+  </div>
+
+  <div id="levelCompleteOverlay" class="overlay hidden">
+    <div class="level-complete" id="levelCompleteBox"></div>
   </div>
 
 </div>
@@ -962,10 +1010,7 @@
   let waitingNextQuestion = false;
   let furthestCompleted = -1; // índice del último nivel COMPLETADO
   let selectedCharacter = "spiderman";
-  let audioInitialized = false;
-  let musicEnabled = false;
-  let sfx = { levelComplete: null, correct: null, incorrect: null };
-  let music = null;
+  
 
   function $(id) {
     return document.getElementById(id);
@@ -1001,12 +1046,7 @@
     renderLevelMenu();
     updateCharacterPreview();
 
-    if (!audioInitialized) {
-      initAudio();
-      audioInitialized = true;
-    }
-    const musicBtn = $("musicToggleBtn");
-    if (musicBtn) { musicBtn.textContent = "🔇"; musicBtn.title = "Música: OFF"; }
+    
     const actionsPanel = $("actionsPanel");
     if (actionsPanel && window.matchMedia && window.matchMedia('(max-width: 480px)').matches) {
       actionsPanel.classList.remove('open');
@@ -1174,27 +1214,8 @@
       furthestCompleted = currentLevelIndex;
     }
 
-    const levelSummary = $("levelSummary");
-    levelSummary.classList.remove("hidden");
-
-    const starText = "★".repeat(stars) + "☆".repeat(3 - stars);
-
-    levelSummary.innerHTML = `
-      <h3>Nivel completado</h3>
-      <p>Has completado <strong>${levels[currentLevelIndex].name}</strong>.</p>
-      <p>Errores en este intento: <strong>${errorsThisLevel}</strong></p>
-      <p>Estrellas obtenidas en este intento: <span class="stars">${starText}</span></p>
-      <p class="small">Puedes repetir el nivel para intentar obtener más estrellas. Tu mejor resultado se guardará.</p>
-    `;
-
-    $("repeatLevelBtn").classList.remove("hidden");
-    $("goToMapBtn").classList.remove("hidden");
-
-    if (currentLevelIndex < levels.length - 1) {
-      $("nextBtn").textContent = "Siguiente nivel";
-    } else {
-      $("nextBtn").textContent = "Ver resumen final";
-    }
+    $("levelSummary").classList.add("hidden");
+    openLevelCompleteOverlay(stars);
 
     waitingNextQuestion = false;
     updateProgressBar(true);
@@ -1291,6 +1312,50 @@
     const panel = $("actionsPanel");
     if (!panel) return;
     panel.classList.toggle("open");
+  }
+  function openLevelCompleteOverlay(stars) {
+    const overlay = $("levelCompleteOverlay");
+    const box = $("levelCompleteBox");
+    if (!overlay || !box) return;
+    const starText = "★".repeat(stars) + "☆".repeat(3 - stars);
+    const isLast = currentLevelIndex >= levels.length - 1;
+    box.innerHTML = `
+      <h3>Nivel completado</h3>
+      <p>Has completado <strong>${levels[currentLevelIndex].name}</strong>.</p>
+      <p>Errores en este intento: <strong>${errorsThisLevel}</strong></p>
+      <p>Estrellas obtenidas: <span class="stars">${starText}</span></p>
+      <div class="actions" style="justify-content:space-between;">
+        <button class="secondary" onclick="closeLevelCompleteOverlay(); repeatLevel()">Repetir nivel</button>
+        <button class="secondary" onclick="closeLevelCompleteOverlay(); backToWorldMap()">Mapa del mundo</button>
+        ${isLast
+          ? `<button class="primary" onclick="closeLevelCompleteOverlay(); showFinalSummary()">Ver resumen final</button>`
+          : `<button class="primary" onclick="closeLevelCompleteOverlay(); goToNextLevel()">Siguiente nivel</button>`}
+      </div>
+    `;
+    overlay.classList.remove("hidden");
+  }
+  function closeLevelCompleteOverlay() {
+    const overlay = $("levelCompleteOverlay");
+    if (overlay) overlay.classList.add("hidden");
+  }
+  function fireConfetti(count, colors) {
+    const w = window.innerWidth;
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement("span");
+      el.className = "confetti-piece";
+      const left = Math.random() * w;
+      const size = 6 + Math.random() * 8;
+      const dur = 1200 + Math.random() * 1800;
+      const delay = Math.random() * 200;
+      el.style.left = left + "px";
+      el.style.width = size + "px";
+      el.style.height = (size * 1.5) + "px";
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      el.style.animationDuration = dur + "ms, " + dur + "ms";
+      el.style.animationDelay = delay + "ms, " + delay + "ms";
+      document.body.appendChild(el);
+      setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, dur + delay + 100);
+    }
   }
 
   function showGlosarioFinal() {
@@ -1496,33 +1561,13 @@
       avatarGame.alt = data.name;
     }
   }
-  function initAudio() {
-    const toDirect = (id) => `https://drive.google.com/uc?export=download&id=${id}`;
-    sfx.levelComplete = new Audio(toDirect("1bQ8HW5P1UUYqLlhbVse6gkOueRqBeyBn"));
-    sfx.correct = new Audio(toDirect("1cAfhjKc-sYOx_WsSGFho6Syw2f6b7OVF"));
-    sfx.incorrect = new Audio(toDirect("1Ps97wZwqnw53DX5EGUUwzDrie_7NiWj1"));
-    [sfx.levelComplete, sfx.correct, sfx.incorrect].forEach(a => { if (a) { a.crossOrigin = "anonymous"; a.volume = 0.8; } });
-    music = new Audio(toDirect("1L0pS_9R2p5AsZG_EZGfKcJrMwlTvBTL9"));
-    music.crossOrigin = "anonymous";
-    music.loop = true;
-    music.volume = 0.4;
-  }
+  
 
-  function toggleMusic() {
-    musicEnabled = !musicEnabled;
-    const btn = $("musicToggleBtn");
-    if (btn) { btn.textContent = musicEnabled ? "🎵" : "🔇"; btn.title = musicEnabled ? "Música: ON" : "Música: OFF"; }
-    if (!music) return;
-    if (musicEnabled) {
-      try { music.currentTime = 0; music.play(); } catch (_) {}
-    } else {
-      try { music.pause(); } catch (_) {}
-    }
-  }
+  
 
-  function playCorrect() { try { if (sfx.correct) { sfx.correct.currentTime = 0; sfx.correct.play(); } } catch (_) {} }
-  function playIncorrect() { try { if (sfx.incorrect) { sfx.incorrect.currentTime = 0; sfx.incorrect.play(); } } catch (_) {} }
-  function playLevelComplete() { try { if (sfx.levelComplete) { sfx.levelComplete.currentTime = 0; sfx.levelComplete.play(); } } catch (_) {} }
+  function playCorrect() { try { fireConfetti(80, ["#34d399","#fde047","#c4b5fd","#60a5fa","#fca5a5"]); } catch (_) {} }
+  function playIncorrect() { try { fireConfetti(25, ["#ef4444","#f59e0b","#f87171"]); const qb = $("optionsContainer"); if (qb) { qb.classList.add("shake"); setTimeout(()=>qb.classList.remove("shake"), 500); } } catch (_) {} }
+  function playLevelComplete() { try { fireConfetti(150, ["#34d399","#fde047","#c4b5fd","#60a5fa","#fca5a5","#f472b6"]); } catch (_) {} }
 </script>
 </body>
 </html>
