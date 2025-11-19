@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Escape SAMR - MTAC en Tabasco</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top, #1d2538 0, #111827 35%, #020617 75%, #000000 100%);
+      color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .game-container {
+      background: rgba(7, 16, 40, 0.95);
+      border-radius: 20px;
+      padding: 20px 24px;
+      max-width: 1000px;
+      width: 95%;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.7);
+      margin: 12px;
+      border: 2px solid rgba(148,163,184,0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-container::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 10% 20%, rgba(236, 72, 153, 0.18) 0, transparent 50%),
+        radial-gradient(circle at 80% 0%, rgba(56, 189, 248, 0.2) 0, transparent 55%),
+        radial-gradient(circle at 50% 100%, rgba(129, 140, 248, 0.22) 0, transparent 50%);
+      opacity: 0.9;
+      z-index: -1;
+      animation: glowMove 16s linear infinite alternate;
+    }
+
+    @keyframes glowMove {
+      from { transform: translate3d(-10px, 10px, 0); }
+      to   { transform: translate3d(10px, -10px, 0); }
+    }
+
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      text-align: center;
+      text-shadow: 0 0 8px rgba(0,0,0,0.6);
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.95rem;
+      color: #a5b4fc;
+      margin-bottom: 16px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .input-group {
+      margin: 12px 0;
+    }
+
+    label {
+      font-size: 0.9rem;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(148,163,184,0.8);
+      outline: none;
+      background: rgba(15,23,42,0.9);
+      color: #f5f5f5;
+    }
+
+    input[type="text"]::placeholder {
+      color: rgba(148,163,184,0.8);
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 9px 20px;
+      cursor: pointer;
+      font-weight: 600;
+      margin: 4px;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s ease, opacity 0.2s ease, border 0.2s ease;
+      font-size: 0.9rem;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, #6366f1, #ec4899);
+      color: #f9fafb;
+      box-shadow: 0 4px 14px rgba(79,70,229,0.75);
+      border: 1px solid rgba(248,250,252,0.18);
+    }
+
+    button.primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgba(79,70,229,0.9);
+    }
+
+    button.secondary {
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      color: #011627;
+      box-shadow: 0 3px 10px rgba(15,23,42,0.8);
+      border: 1px solid rgba(148,163,184,0.5);
+    }
+
+    button.secondary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(15,23,42,0.9);
+    }
+
+    button.option-btn {
+      width: 100%;
+      text-align: left;
+      margin-top: 6px;
+      background: rgba(15,23,42,0.9);
+      color: #f5f5f5;
+      border-radius: 12px;
+      border: 1px solid rgba(30,64,175,0.7);
+      white-space: normal;
+      backdrop-filter: blur(4px);
+    }
+
+    button.option-btn:hover {
+      background: rgba(30,64,175,0.9);
+    }
+
+    button.option-btn.selected {
+      border-color: #a855f7;
+      background: radial-gradient(circle at top left, rgba(168,85,247,0.3), rgba(15,23,42,0.95));
+      box-shadow: 0 0 14px rgba(168,85,247,0.7);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .level-info {
+      font-size: 0.9rem;
+    }
+
+    .progress-container {
+      background: rgba(31,41,55,0.95);
+      border-radius: 999px;
+      overflow: hidden;
+      height: 14px;
+      flex: 1;
+      min-width: 120px;
+      box-shadow: 0 0 0 1px rgba(15,23,42,0.9);
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #eab308, #f97316, #ef4444);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .story-box, .question-box, .feedback-box {
+      background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(15,23,64,0.98));
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-top: 10px;
+      font-size: 0.9rem;
+      border: 1px solid rgba(30,64,175,0.8);
+    }
+
+    .story-box {
+      border-left: 3px solid #ec4899;
+    }
+
+    .question-title {
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .feedback-box.correct {
+      border-left: 3px solid #22c55e;
+      color: #bbf7d0;
+    }
+
+    .feedback-box.incorrect {
+      border-left: 3px solid #ef4444;
+      color: #fecaca;
+    }
+
+    .actions {
+      margin-top: 10px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .stars {
+      color: #c4b5fd;
+      font-size: 1.1rem;
+      text-shadow: 0 0 6px rgba(15,23,42,0.7);
+    }
+
+    .level-summary, .final-summary {
+      margin-top: 16px;
+      background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(15,23,64,0.98));
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      border: 1px solid rgba(30,64,175,0.7);
+    }
+
+    .levels-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .level-card {
+      background: radial-gradient(circle at top, rgba(129,140,248,0.16), rgba(15,23,42,0.96));
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 0.85rem;
+      border: 1px solid rgba(51,65,85,0.9);
+    }
+
+    .level-card h4 {
+      margin: 0 0 4px 0;
+      font-size: 0.95rem;
+    }
+
+    .glosario {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(31,41,89,0.98));
+      border-radius: 14px;
+      padding: 10px 12px;
+      border: 1px solid rgba(148,163,184,0.7);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: rgba(148,163,184,0.8);
+      margin-right: 4px;
+      margin-bottom: 4px;
+      color: #020617;
+    }
+
+    .small {
+      font-size: 0.8rem;
+      opacity: 0.9;
+    }
+
+    /* Personaje */
+    .character-panel {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+      background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(30,64,175,0.98));
+      border-radius: 14px;
+      padding: 8px 10px;
+      border: 1px solid rgba(148,163,184,0.8);
+    }
+
+    .avatar-circle {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 20%, rgba(56,189,248,0.9), rgba(15,23,42,1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.9rem;
+      box-shadow: 0 0 0 2px rgba(148,163,184,0.9), 0 0 14px rgba(56,189,248,0.9);
+      animation: pulseAvatar 1.6s ease-in-out infinite;
+      overflow: hidden;
+    }
+
+    .avatar-circle img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    @keyframes pulseAvatar {
+      0%   { transform: scale(1); box-shadow: 0 0 0 2px rgba(148,163,184,0.9), 0 0 14px rgba(56,189,248,0.8); }
+      50%  { transform: scale(1.05); box-shadow: 0 0 0 3px rgba(248,250,252,0.9), 0 0 22px rgba(129,140,248,1); }
+      100% { transform: scale(1); box-shadow: 0 0 0 2px rgba(148,163,184,0.9), 0 0 14px rgba(56,189,248,0.8); }
+    }
+
+    .char-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .char-role {
+      font-size: 0.8rem;
+      color: #d2e0ff;
+    }
+
+    /* Pantalla MAPA del mundo */
+    .map-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .map-card {
+      background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(30,64,175,0.98));
+      border-radius: 16px;
+      padding: 10px 12px;
+      border: 1px solid rgba(148,163,184,0.8);
+    }
+
+    .character-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .character-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(15,23,42,0.98);
+      border-radius: 12px;
+      padding: 8px 10px;
+      border: 1px solid rgba(51,65,85,0.9);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .character-card:hover {
+      border-color: #6366f1;
+    }
+
+    .character-card.selected {
+      border-color: #a855f7;
+      box-shadow: 0 0 16px rgba(168,85,247,0.9);
+      background: radial-gradient(circle at top left, rgba(168,85,247,0.35), rgba(15,23,42,0.98));
+    }
+
+    .character-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle, rgba(56,189,248,0.9), rgba(15,23,42,1));
+    }
+
+    .character-avatar img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .char-card-info-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .char-card-info-sub {
+      font-size: 0.8rem;
+      color: #e5e7eb;
+    }
+
+    /* Overlay menú de niveles */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(129,140,248,0.25), rgba(0,0,0,0.9));
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      padding: 12px;
+      backdrop-filter: blur(3px);
+    }
+
+    .overlay.hidden {
+      display: none;
+    }
+
+    .level-menu {
+      background: linear-gradient(135deg, #020617, #020617, #111827);
+      border-radius: 16px;
+      padding: 16px 18px;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.8);
+      border: 1px solid rgba(148,163,184,0.9);
+    }
+
+    .level-menu-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .status-label {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+    }
+
+    .status-unlocked {
+      background: rgba(46, 213, 115, 0.18);
+      color: #4ade80;
+    }
+
+    .status-locked {
+      background: rgba(239, 68, 68, 0.18);
+      color: #fecaca;
+    }
+
+    .status-current {
+      background: rgba(168, 85, 247, 0.25);
+      color: #c4b5fd;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body {
+        align-items: flex-start;
+      }
+      .game-container {
+        padding: 16px;
+        margin: 8px;
+      }
+      h1 {
+        font-size: 1.6rem;
+      }
+      .top-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .actions {
+        justify-content: center;
+      }
+      button {
+        font-size: 0.85rem;
+      }
+      .level-menu {
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .map-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.4rem;
+      }
+      .subtitle {
+        font-size: 0.85rem;
+      }
+      .character-panel {
+        flex-direction: row;
+      }
+      .avatar-circle {
+        width: 46px;
+        height: 46px;
+        font-size: 1.6rem;
+      }
+      button.primary, button.secondary {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="game-container">
+
+  <!-- PANTALLA DE INICIO -->
+  <section id="screen-start">
+    <h1>Escape SAMR – Misión MTAC en Tabasco</h1>
+    <p class="subtitle">
+      Estás atrapado en una zona peligrosa de Tabasco. Solo dominando el modelo SAMR podrás encontrar la ruta de escape.
+    </p>
+
+    <div class="story-box">
+      <p>
+        Una tormenta eléctrica ha dejado incomunicado el complejo de investigación <strong>“La Zona Roja de Tabasco”</strong>. 
+        Como estudiante de la <strong>MTAC</strong>, estás participando en una estancia académica… hasta que todo se sale de control.
+      </p>
+      <p>
+        Los sistemas de seguridad bloquean las salidas y aparece un mensaje en la pantalla central:
+        <em>“Solo quienes comprendan el modelo SAMR podrán desbloquear las puertas”.</em>
+      </p>
+    </div>
+
+    <div class="character-panel">
+      <div class="avatar-circle">🧑‍💻</div>
+      <div>
+        <div class="char-name" id="startCharName">Agente: Estudiante MTAC</div>
+        <div class="char-role small">Listo para enfrentar la Zona Roja de Tabasco.</div>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label for="playerName">Escribe tu nombre (para que la misión sea personalizada):</label>
+      <input type="text" id="playerName" placeholder="Ejemplo: Ana, Luis, etc.">
+    </div>
+
+    <button class="primary" onclick="startGame()">Comenzar misión</button>
+
+    <div class="glosario small" style="margin-top:16px;">
+      <strong>Nota para docentes:</strong><br>
+      Este juego trabaja el modelo SAMR (definición, niveles y ventajas) a través de 
+      preguntas de opción múltiple, verdadero/falso y casos prácticos. Ideal para estudiantes de universidad (MTAC).
+    </div>
+  </section>
+
+  <!-- PANTALLA DE MAPA DEL MUNDO + SELECCIÓN DE PERSONAJE -->
+  <section id="screen-map" class="hidden">
+    <h1>Mapa del mundo – Escape SAMR</h1>
+    <p class="subtitle">
+      Bienvenido, <span id="mapPlayerName"></span>. Elige tu punto de inicio y tu héroe para escapar de la Zona Roja.
+    </p>
+
+    <div class="map-grid">
+      <div class="map-card">
+        <h3>Mapa de niveles</h3>
+        <p class="small">
+          Cada zona del mapa representa un nivel del modelo SAMR. Solo puedes avanzar en orden,
+          pero podrás volver a niveles anteriores para mejorar tus estrellas.
+        </p>
+        <div class="levels-grid" id="worldLevelGrid"></div>
+      </div>
+
+      <div class="map-card">
+        <h3>Elige tu personaje</h3>
+        <p class="small">Selecciona el personaje con el que quieres vivir esta misión.</p>
+        <div class="character-options">
+          <button type="button" class="character-card" id="char-spiderman" onclick="chooseCharacter('spiderman')">
+            <div class="character-avatar">
+              <img src="https://www.pixilart.com/art/spiderman-0b248252796f0db" alt="Spider-Man">
+            </div>
+            <div>
+              <div class="char-card-info-title">Spider-Man</div>
+              <div class="char-card-info-sub">Héroe ágil y estratégico. Ideal para salir de cualquier enredo tecnológico.</div>
+            </div>
+          </button>
+
+          <button type="button" class="character-card" id="char-harley" onclick="chooseCharacter('harley')">
+            <div class="character-avatar">
+              <img src="https://blerp.com/soundbites/61a819004b0ecb37a2a763b9" alt="Harley Quinn">
+            </div>
+            <div>
+              <div class="char-card-info-title">Harley Quinn</div>
+              <div class="char-card-info-sub">Arriesgada y creativa. Perfecta para redefinir cualquier actividad del aula.</div>
+            </div>
+          </button>
+        </div>
+        <p class="small" style="margin-top:8px;">
+          Personaje seleccionado: <strong id="selectedCharacterLabel"></strong>
+        </p>
+      </div>
+    </div>
+
+    <div class="actions" style="justify-content: space-between; margin-top:14px;">
+      <button class="secondary" onclick="backToStart()">Cambiar nombre</button>
+      <button class="primary" onclick="goToSuggestedLevel()">Ir al nivel sugerido</button>
+    </div>
+  </section>
+
+  <!-- PANTALLA DE JUEGO PRINCIPAL -->
+  <section id="screen-game" class="hidden">
+    <div class="top-bar">
+      <div class="level-info">
+        <div id="playerLabel"></div>
+        <div id="levelLabel"></div>
+      </div>
+      <div class="progress-container" title="Progreso de escape">
+        <div id="progressBar" class="progress-bar"></div>
+      </div>
+      <div>
+        <button class="secondary" onclick="openLevelMenu()">Mapa de niveles</button>
+        <button class="secondary" onclick="toggleGlosario()">Ayuda / Glosario</button>
+      </div>
+    </div>
+
+    <div class="character-panel">
+      <div class="avatar-circle">
+        <img id="gameAvatarImg" alt="Personaje seleccionado">
+      </div>
+      <div>
+        <div class="char-name" id="charName"></div>
+        <div class="char-role small">Estudiante MTAC atrapado en “La Zona Roja de Tabasco”.</div>
+      </div>
+    </div>
+
+    <div id="glosarioBox" class="glosario hidden">
+      <h3>Glosario SAMR</h3>
+      <p><span class="tag">S</span><strong>Sustitución</strong>: la tecnología actúa como un simple reemplazo de la herramienta tradicional, sin cambios significativos en la tarea.</p>
+      <p><span class="tag">A</span><strong>Aumento</strong>: la tecnología sigue sustituyendo, pero con mejoras funcionales que hacen la tarea más eficiente o cómoda.</p>
+      <p><span class="tag">M</span><strong>Modificación</strong>: la tecnología permite rediseñar de forma importante la tarea, cambiando la forma en que los estudiantes trabajan.</p>
+      <p><span class="tag">R</span><strong>Redefinición</strong>: la tecnología posibilita tareas nuevas que antes eran imposibles o muy difíciles de realizar.</p>
+      <hr>
+      <p><strong>Ventajas del modelo SAMR:</strong></p>
+      <ul>
+        <li>Ayuda a reflexionar sobre cómo se integra la tecnología en el aula.</li>
+        <li>Permite avanzar de un uso básico a uno transformador.</li>
+        <li>Facilita diseñar experiencias de aprendizaje más significativas y auténticas.</li>
+      </ul>
+    </div>
+
+    <div class="story-box" id="storyBox"></div>
+
+    <div class="question-box">
+      <div class="question-title" id="questionTitle"></div>
+      <div id="questionText"></div>
+      <div id="optionsContainer"></div>
+    </div>
+
+    <div id="feedbackBox" class="feedback-box hidden"></div>
+
+    <div class="actions">
+      <button class="secondary hidden" id="repeatLevelBtn" onclick="repeatLevel()">Repetir nivel</button>
+      <button class="primary" id="nextBtn" onclick="nextStep()">Responder</button>
+    </div>
+
+    <div id="levelSummary" class="level-summary hidden"></div>
+  </section>
+
+  <!-- PANTALLA DE RESUMEN FINAL -->
+  <section id="screen-final" class="hidden">
+    <h2>Resumen de tu escape</h2>
+    <p id="finalIntro"></p>
+
+    <div class="final-summary">
+      <h3>Estrellas por nivel</h3>
+      <div class="levels-grid" id="levelsGrid"></div>
+      <hr>
+      <h3>Comentario general</h3>
+      <p id="finalComment"></p>
+    </div>
+
+    <div class="actions" style="justify-content:space-between;">
+      <button class="secondary" onclick="showGlosarioFinal()">Ver glosario SAMR</button>
+      <button class="primary" onclick="resetGame()">Volver a jugar</button>
+    </div>
+
+    <div id="finalGlosario" class="glosario hidden">
+      <h3>Glosario SAMR (recordatorio)</h3>
+      <p><strong>Sustitución:</strong> la tecnología reemplaza la herramienta tradicional sin cambiar la tarea.</p>
+      <p><strong>Aumento:</strong> la tecnología añade mejoras funcionales a esa tarea.</p>
+      <p><strong>Modificación:</strong> la tecnología permite rediseñar la actividad de forma notable.</p>
+      <p><strong>Redefinición:</strong> la tecnología hace posible tareas nuevas que antes no se podían realizar.</p>
+      <p><strong>Ventajas:</strong> guía el diseño didáctico, ayuda a planear mejor el uso de tecnología y orienta hacia experiencias transformadoras.</p>
+    </div>
+  </section>
+
+  <!-- OVERLAY DEL MENÚ DE NIVELES -->
+  <div id="levelMenuOverlay" class="overlay hidden">
+    <div class="level-menu">
+      <div class="level-menu-header">
+        <h3>Mapa de niveles – Escape SAMR</h3>
+        <button class="secondary" onclick="closeLevelMenu()">Cerrar</button>
+      </div>
+      <p class="small">
+        Selecciona un nivel. Solo puedes avanzar en orden, pero puedes repetir niveles ya desbloqueados para mejorar tus estrellas.
+      </p>
+      <div class="levels-grid" id="levelMenuGrid"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ------------------------
+  // Datos del juego
+  // ------------------------
+
+  const levels = [
+    {
+      name: "Nivel 1 – ¿Qué es SAMR?",
+      story: "Las luces de emergencia parpadean en el pasillo principal de La Zona Roja. Para abrir la primera compuerta, el sistema te reta a demostrar que realmente sabes qué es el modelo SAMR.",
+      questions: [
+        {
+          type: "mcq",
+          title: "Propósito del modelo",
+          text: "¿Para qué se utiliza principalmente el modelo SAMR?",
+          options: [
+            "Para medir la asistencia de los estudiantes en clase.",
+            "Para clasificar el nivel de integración de la tecnología en las actividades de aprendizaje.",
+            "Para evaluar únicamente la calidad de los dispositivos digitales.",
+            "Para decidir qué asignaturas se eliminan del plan de estudios."
+          ],
+          correctIndex: 1,
+          hintOnWrong: "Piensa en SAMR como una forma de analizar cómo se usa la tecnología dentro de las actividades, no solo los dispositivos."
+        },
+        {
+          type: "vf",
+          title: "Verdadero o falso",
+          text: "SAMR ayuda a reflexionar sobre cómo la tecnología puede transformar las tareas educativas, no solo a digitalizarlas.",
+          options: ["Verdadero", "Falso"],
+          correctIndex: 0,
+          hintOnWrong: "Reflexiona si SAMR se queda en cambiar papel por pantalla o si busca ir más allá."
+        },
+        {
+          type: "mcq",
+          title: "Componentes del modelo",
+          text: "¿Cuál de las siguientes opciones corresponde a las cuatro etapas del modelo SAMR?",
+          options: [
+            "Sustitución, Aumento, Modificación y Redefinición.",
+            "Sustitución, Aumento, Motivación y Retroalimentación.",
+            "Simulación, Análisis, Medición y Revisión.",
+            "Selección, Adaptación, Mejora y Revisión."
+          ],
+          correctIndex: 0,
+          hintOnWrong: "Recuerda que SAMR es un acrónimo en inglés; cada letra corresponde a una etapa específica."
+        }
+      ]
+    },
+    {
+      name: "Nivel 2 – Sustitución y Aumento",
+      story: "Has desbloqueado la primera compuerta, pero el pasillo se inunda lentamente. El sistema ahora quiere saber si distingues entre un uso básico de la tecnología y un uso mejorado.",
+      questions: [
+        {
+          type: "case",
+          title: "Caso 1",
+          text: "Un docente pide a sus estudiantes que, en vez de escribir un ensayo a mano, lo redacten en un procesador de texto sin cambiar nada más de la actividad. ¿Qué nivel de SAMR describe mejor esta situación?",
+          options: ["Sustitución", "Aumento", "Modificación", "Redefinición"],
+          correctIndex: 0,
+          hintOnWrong: "Analiza si la tecnología solo reemplaza la herramienta o si agrega mejoras funcionales importantes."
+        },
+        {
+          type: "case",
+          title: "Caso 2",
+          text: "Los estudiantes realizan un cuestionario en línea que les ofrece retroalimentación inmediata, estadísticas de aciertos, tiempo de respuesta y sugerencias de repaso. Antes el cuestionario era en papel y sin comentarios.",
+          options: ["Sustitución", "Aumento", "Modificación", "Redefinición"],
+          correctIndex: 1,
+          hintOnWrong: "Piensa si aquí la tecnología añade ventajas funcionales claras en comparación con la versión en papel."
+        },
+        {
+          type: "vf",
+          title: "Diferencia clave",
+          text: "En la sustitución, la tecnología reemplaza a la herramienta tradicional sin añadir mejoras importantes, mientras que en el aumento sí se incluyen mejoras funcionales.",
+          options: ["Verdadero", "Falso"],
+          correctIndex: 0,
+          hintOnWrong: "Revisa la diferencia entre usar tecnología como simple reemplazo y usarla para mejorar la misma tarea."
+        }
+      ]
+    },
+    {
+      name: "Nivel 3 – Modificación y Redefinición",
+      story: "Las puertas siguientes llevan a un laboratorio inestable. Para avanzar, debes demostrar que entiendes cómo la tecnología puede transformar y redefinir las tareas.",
+      questions: [
+        {
+          type: "case",
+          title: "Caso 3",
+          text: "Los estudiantes elaboran un informe colaborativo en un documento en línea, comentan en tiempo real, hacen correcciones simultáneas y el docente puede revisar el historial de cambios.",
+          options: ["Sustitución", "Aumento", "Modificación", "Redefinición"],
+          correctIndex: 2,
+          hintOnWrong: "Reflexiona si aquí la tarea se rediseña de forma significativa gracias a la colaboración en línea."
+        },
+        {
+          type: "case",
+          title: "Caso 4",
+          text: "Un grupo de estudiantes crea un podcast educativo con entrevistas a expertos internacionales conectados por videoconferencia. El podcast se publica en plataformas abiertas para que otras escuelas lo usen.",
+          options: ["Sustitución", "Aumento", "Modificación", "Redefinición"],
+          correctIndex: 3,
+          hintOnWrong: "Pregunta si esta tarea habría sido muy difícil o casi imposible sin tecnología digital."
+        },
+        {
+          type: "mcq",
+          title: "Modificación vs Redefinición",
+          text: "¿Cuál enunciado describe mejor la diferencia entre Modificación y Redefinición?",
+          options: [
+            "En Modificación se eliminan tareas, y en Redefinición se repiten igual.",
+            "En Modificación se rediseña la tarea, mientras que en Redefinición se crean tareas nuevas que antes no eran posibles.",
+            "En Modificación se usan más dispositivos, y en Redefinición menos.",
+            "No existe diferencia entre ambas; son sinónimos."
+          ],
+          correctIndex: 1,
+          hintOnWrong: "Piensa en qué nivel la tecnología permite actividades que antes no podrían haberse realizado."
+        }
+      ]
+    },
+    {
+      name: "Nivel 4 – Ventajas y aplicación en el aula",
+      story: "Estás a punto de llegar a la salida de La Zona Roja, pero una última compuerta pide evidencia de que sabes usar SAMR para mejorar la enseñanza, no solo memorizarlo.",
+      questions: [
+        {
+          type: "mcq",
+          title: "Ventaja principal",
+          text: "Una de las ventajas de aplicar SAMR en el diseño de clases es:",
+          options: [
+            "Elegir la marca de computadoras más cara.",
+            "Reflexionar sobre el impacto de la tecnología y avanzar hacia usos cada vez más significativos.",
+            "Eliminar todas las actividades sin tecnología.",
+            "Obligar a que todas las tareas se hagan en el máximo nivel."
+          ],
+          correctIndex: 1,
+          hintOnWrong: "Concéntrate en cómo SAMR guía la reflexión y la mejora del uso de la tecnología."
+        },
+        {
+          type: "vf",
+          title: "Uso flexible",
+          text: "Es obligatorio que todas las actividades lleguen al nivel de Redefinición para que la tecnología sea considerada válida.",
+          options: ["Verdadero", "Falso"],
+          correctIndex: 1,
+          hintOnWrong: "Reflexiona si siempre es necesario llegar al nivel más alto o si depende de los objetivos pedagógicos."
+        },
+        {
+          type: "case",
+          title: "Planificación docente",
+          text: "Como estudiante de la MTAC, diseñas una actividad donde los alumnos primero digitalizan un texto (S/A) y luego crean un proyecto multimedia colaborativo que se comparte más allá del aula. ¿Cómo te ayuda SAMR en este proceso?",
+          options: [
+            "Solo sirve para saber cuántas computadoras usar.",
+            "Permite planear un progreso desde usos básicos hasta tareas más transformadoras con tecnología.",
+            "Te obliga a eliminar cualquier actividad sin tecnología.",
+            "Evita que cambies tu planificación original."
+          ],
+          correctIndex: 1,
+          hintOnWrong: "Piensa en SAMR como una guía para pasar de lo básico a lo transformador, no como una regla rígida."
+        }
+      ]
+    }
+  ];
+
+  const characters = {
+    spiderman: {
+      name: "Spider-Man",
+      img: "https://www.pixilart.com/art/spiderman-0b248252796f0db"
+    },
+    harley: {
+      name: "Harley Quinn",
+      img: "https://blerp.com/soundbites/61a819004b0ecb37a2a763b9" // Cambia este enlace por una imagen PNG/SVG si lo necesitas
+    }
+  };
+
+  let currentLevelIndex = 0;
+  let currentQuestionIndex = 0;
+  let errorsThisLevel = 0;
+  let levelStars = new Array(levels.length).fill(0);
+  let playerName = "";
+  let selectedOptionIndex = null;
+  let waitingNextQuestion = false;
+  let furthestCompleted = -1; // índice del último nivel COMPLETADO
+  let selectedCharacter = "spiderman";
+
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  // ------------------------
+  // Flujo de pantallas
+  // ------------------------
+
+  function startGame() {
+    const nameInput = $("playerName").value.trim();
+    playerName = nameInput || "Estudiante";
+    $("playerLabel").textContent = `Agente: ${playerName} (MTAC)`;
+    $("charName").textContent = `Agente ${playerName} – ${characters[selectedCharacter].name}`;
+    $("startCharName").textContent = `Agente: ${playerName} (MTAC)`;
+
+    // Reseteamos estado general
+    currentLevelIndex = 0;
+    currentQuestionIndex = 0;
+    errorsThisLevel = 0;
+    waitingNextQuestion = false;
+    furthestCompleted = -1;
+    levelStars = new Array(levels.length).fill(0);
+    selectedCharacter = "spiderman";
+
+    $("screen-start").classList.add("hidden");
+    $("screen-map").classList.remove("hidden");
+
+    $("mapPlayerName").textContent = playerName;
+    updateLevelLabel();
+    updateProgressBar();
+    renderWorldLevelGrid();
+    renderLevelMenu();
+    updateCharacterPreview();
+  }
+
+  function backToStart() {
+    $("screen-map").classList.add("hidden");
+    $("screen-start").classList.remove("hidden");
+  }
+
+  function goToSuggestedLevel() {
+    // Sugerimos el primer nivel desbloqueado
+    const suggestedIndex = Math.max(0, furthestCompleted + 1);
+    jumpToLevel(suggestedIndex);
+    enterLevelFromMap();
+  }
+
+  function enterLevelFromMap() {
+    $("screen-map").classList.add("hidden");
+    $("screen-game").classList.remove("hidden");
+    $("playerLabel").textContent = `Agente: ${playerName} (MTAC)`;
+    $("charName").textContent = `Agente ${playerName} – ${characters[selectedCharacter].name}`;
+    updateCharacterPreview();
+    updateProgressBar();
+  }
+
+  // ------------------------
+  // Lógica del juego
+  // ------------------------
+
+  function updateLevelLabel() {
+    $("levelLabel").textContent = levels[currentLevelIndex].name;
+  }
+
+  function showStory() {
+    $("storyBox").textContent = levels[currentLevelIndex].story;
+  }
+
+  function showQuestion() {
+    const level = levels[currentLevelIndex];
+    const question = level.questions[currentQuestionIndex];
+
+    $("questionTitle").textContent = question.title;
+    $("questionText").textContent = question.text;
+
+    const optionsContainer = $("optionsContainer");
+    optionsContainer.innerHTML = "";
+    selectedOptionIndex = null;
+    waitingNextQuestion = false;
+
+    question.options.forEach((optionText, index) => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.textContent = optionText;
+      btn.onclick = () => selectOption(index);
+      optionsContainer.appendChild(btn);
+    });
+
+    $("feedbackBox").classList.add("hidden");
+    $("feedbackBox").textContent = "";
+    $("feedbackBox").classList.remove("correct", "incorrect");
+    $("nextBtn").textContent = "Responder";
+    $("repeatLevelBtn").classList.add("hidden");
+    $("levelSummary").classList.add("hidden");
+  }
+
+  function selectOption(index) {
+    selectedOptionIndex = index;
+    const optionButtons = $("optionsContainer").querySelectorAll(".option-btn");
+    optionButtons.forEach((btn, i) => {
+      btn.classList.toggle("selected", i === index);
+    });
+  }
+
+  function nextStep() {
+    if ($("nextBtn").textContent === "Siguiente nivel") {
+      goToNextLevel();
+      return;
+    }
+
+    if ($("nextBtn").textContent === "Ver resumen final") {
+      showFinalSummary();
+      return;
+    }
+
+    if (waitingNextQuestion) {
+      goToNextQuestionOrEndLevel();
+      return;
+    }
+
+    const level = levels[currentLevelIndex];
+    const question = level.questions[currentQuestionIndex];
+
+    if (selectedOptionIndex === null) {
+      showFeedback("Selecciona una opción antes de continuar.", false, true);
+      return;
+    }
+
+    const isCorrect = selectedOptionIndex === question.correctIndex;
+    if (isCorrect) {
+      showFeedback("¡Correcto! Has superado este reto.", true);
+      waitingNextQuestion = true;
+      $("nextBtn").textContent = "Siguiente";
+    } else {
+      errorsThisLevel++;
+      showFeedback(question.hintOnWrong, false);
+      // misma pregunta, intentos ilimitados
+    }
+  }
+
+  function showFeedback(message, correct, isNeutral = false) {
+    const box = $("feedbackBox");
+    box.textContent = message;
+    box.classList.remove("hidden", "correct", "incorrect");
+    if (isNeutral) return;
+    if (correct) {
+      box.classList.add("correct");
+      box.classList.remove("incorrect");
+    } else {
+      box.classList.add("incorrect");
+      box.classList.remove("correct");
+    }
+  }
+
+  function goToNextQuestionOrEndLevel() {
+    const level = levels[currentLevelIndex];
+
+    if (currentQuestionIndex < level.questions.length - 1) {
+      currentQuestionIndex++;
+      showQuestion();
+      updateProgressBar();
+    } else {
+      finishLevel();
+    }
+  }
+
+  function finishLevel() {
+    let stars = 1;
+    if (errorsThisLevel === 0) {
+      stars = 3;
+    } else if (errorsThisLevel <= 2) {
+      stars = 2;
+    }
+
+    if (stars > levelStars[currentLevelIndex]) {
+      levelStars[currentLevelIndex] = stars;
+    }
+
+    if (currentLevelIndex > furthestCompleted) {
+      furthestCompleted = currentLevelIndex;
+    }
+
+    const levelSummary = $("levelSummary");
+    levelSummary.classList.remove("hidden");
+
+    const starText = "★".repeat(stars) + "☆".repeat(3 - stars);
+
+    levelSummary.innerHTML = `
+      <h3>Nivel completado</h3>
+      <p>Has completado <strong>${levels[currentLevelIndex].name}</strong>.</p>
+      <p>Errores en este intento: <strong>${errorsThisLevel}</strong></p>
+      <p>Estrellas obtenidas en este intento: <span class="stars">${starText}</span></p>
+      <p class="small">Puedes repetir el nivel para intentar obtener más estrellas. Tu mejor resultado se guardará.</p>
+    `;
+
+    $("repeatLevelBtn").classList.remove("hidden");
+
+    if (currentLevelIndex < levels.length - 1) {
+      $("nextBtn").textContent = "Siguiente nivel";
+    } else {
+      $("nextBtn").textContent = "Ver resumen final";
+    }
+
+    waitingNextQuestion = false;
+    updateProgressBar(true);
+    renderLevelMenu();
+    renderWorldLevelGrid();
+  }
+
+  function repeatLevel() {
+    errorsThisLevel = 0;
+    currentQuestionIndex = 0;
+    showQuestion();
+    updateProgressBar();
+  }
+
+  function goToNextLevel() {
+    if (currentLevelIndex < levels.length - 1) {
+      currentLevelIndex++;
+      currentQuestionIndex = 0;
+      errorsThisLevel = 0;
+      updateLevelLabel();
+      showStory();
+      showQuestion();
+      updateProgressBar();
+      renderLevelMenu();
+      renderWorldLevelGrid();
+    }
+  }
+
+  // Progreso basado en el nivel más lejano completado
+  function updateProgressBar(endOfLevel = false) {
+    const totalLevels = levels.length;
+    let baseCompleted = (furthestCompleted + 1) / totalLevels;
+    if (furthestCompleted < 0) baseCompleted = 0;
+
+    let percent;
+    if (currentLevelIndex > furthestCompleted) {
+      const level = levels[currentLevelIndex];
+      let levelProgress = currentQuestionIndex / level.questions.length;
+      if (endOfLevel) levelProgress = 1;
+      percent = (baseCompleted + levelProgress / totalLevels) * 100;
+    } else {
+      percent = baseCompleted * 100;
+    }
+
+    if (percent > 100) percent = 100;
+    if (percent < 0) percent = 0;
+
+    $("progressBar").style.width = Math.round(percent) + "%";
+    $("progressBar").title = `Progreso de escape: ${Math.round(percent)}%`;
+  }
+
+  // ------------------------
+  // Resumen final
+  // ------------------------
+
+  function showFinalSummary() {
+    $("screen-game").classList.add("hidden");
+    $("screen-final").classList.remove("hidden");
+
+    const totalStars = levelStars.reduce((a, b) => a + b, 0);
+    const maxStars = levels.length * 3;
+
+    $("finalIntro").textContent = `${playerName}, has completado la misión en La Zona Roja de Tabasco. Tu desempeño en el modelo SAMR fue de ${totalStars} de ${maxStars} estrellas posibles.`;
+
+    const levelsGrid = $("levelsGrid");
+    levelsGrid.innerHTML = "";
+    levels.forEach((level, index) => {
+      const card = document.createElement("div");
+      card.className = "level-card";
+
+      const stars = "★".repeat(levelStars[index]) + "☆".repeat(3 - levelStars[index]);
+
+      card.innerHTML = `
+        <h4>${level.name}</h4>
+        <p>Estrellas: <span class="stars">${stars}</span></p>
+      `;
+      levelsGrid.appendChild(card);
+    });
+
+    $("finalComment").textContent = buildFinalComment(totalStars);
+  }
+
+  function buildFinalComment(totalStars) {
+    const maxStars = levels.length * 3;
+    const ratio = totalStars / maxStars;
+
+    if (ratio >= 0.85) {
+      return "Conoces muy bien el modelo SAMR y sabes aplicar sus niveles de forma coherente. Conoces bien SAMR, pero podrías reforzar la diferencia entre Modificación y Redefinición en situaciones más complejas para consolidar todavía más tu dominio.";
+    } else if (ratio >= 0.55) {
+      return "Vas por muy buen camino: distingues el significado general de SAMR y sus niveles, pero aún puedes afinar la identificación entre Sustitución/Aumento y, sobre todo, entre Modificación y Redefinición. Revisa ejemplos de aula y pregúntate qué tan transformadora es la tecnología en cada caso.";
+    } else {
+      return "Has dado los primeros pasos para comprender SAMR, pero te conviene reforzar especialmente la diferencia entre Modificación y Redefinición, así como volver a revisar en qué se distinguen la Sustitución y el Aumento. Utiliza el glosario y practica con más ejemplos de actividades para afianzar el modelo.";
+    }
+  }
+
+  // ------------------------
+  // Glosario y extras
+  // ------------------------
+
+  function toggleGlosario() {
+    $("glosarioBox").classList.toggle("hidden");
+  }
+
+  function showGlosarioFinal() {
+    $("finalGlosario").classList.toggle("hidden");
+  }
+
+  function resetGame() {
+    currentLevelIndex = 0;
+    currentQuestionIndex = 0;
+    errorsThisLevel = 0;
+    levelStars = new Array(levels.length).fill(0);
+    furthestCompleted = -1;
+    selectedCharacter = "spiderman";
+
+    $("screen-final").classList.add("hidden");
+    $("screen-start").classList.remove("hidden");
+    $("finalGlosario").classList.add("hidden");
+    $("playerName").value = "";
+    $("startCharName").textContent = "Agente: Estudiante MTAC";
+    updateProgressBar();
+    renderLevelMenu();
+    renderWorldLevelGrid();
+  }
+
+  // ------------------------
+  // Menú de niveles (overlay)
+  // ------------------------
+
+  function openLevelMenu() {
+    renderLevelMenu();
+    $("levelMenuOverlay").classList.remove("hidden");
+  }
+
+  function closeLevelMenu() {
+    $("levelMenuOverlay").classList.add("hidden");
+  }
+
+  function renderLevelMenu() {
+    const grid = $("levelMenuGrid");
+    if (!grid) return;
+    grid.innerHTML = "";
+
+    const unlockedLimit = furthestCompleted + 1; // nivel que puedes jugar (siguiente al completado)
+
+    levels.forEach((level, index) => {
+      const card = document.createElement("div");
+      card.className = "level-card";
+
+      const stars = "★".repeat(levelStars[index]) + "☆".repeat(3 - levelStars[index]);
+
+      let statusClass = "status-locked";
+      let statusText = "Bloqueado";
+
+      if (index === currentLevelIndex) {
+        statusClass = "status-current";
+        statusText = "En curso";
+      } else if (index <= unlockedLimit) {
+        statusClass = "status-unlocked";
+        statusText = "Desbloqueado";
+      }
+
+      const locked = index > unlockedLimit;
+
+      card.innerHTML = `
+        <h4>${level.name}</h4>
+        <p>Estrellas: <span class="stars">${stars}</span></p>
+        <p><span class="status-label ${statusClass}">${statusText}</span></p>
+      `;
+
+      const btn = document.createElement("button");
+      btn.textContent = locked ? "Bloqueado" : "Jugar este nivel";
+      btn.className = "secondary";
+      btn.disabled = locked;
+      btn.onclick = () => {
+        if (!locked) {
+          jumpToLevel(index);
+          closeLevelMenu();
+        }
+      };
+
+      card.appendChild(btn);
+      grid.appendChild(card);
+    });
+  }
+
+  // ------------------------
+  // Mapa del mundo (pantalla intermedia)
+  // ------------------------
+
+  function renderWorldLevelGrid() {
+    const grid = $("worldLevelGrid");
+    if (!grid) return;
+    grid.innerHTML = "";
+
+    const unlockedLimit = furthestCompleted + 1; // índice máximo desbloqueado
+
+    levels.forEach((level, index) => {
+      const card = document.createElement("div");
+      card.className = "level-card";
+
+      const stars = "★".repeat(levelStars[index]) + "☆".repeat(3 - levelStars[index]);
+
+      let statusClass = "status-locked";
+      let statusText = "Bloqueado";
+
+      if (furthestCompleted === -1 && index === 0) {
+        statusClass = "status-current";
+        statusText = "Inicio sugerido";
+      } else if (index <= unlockedLimit) {
+        statusClass = index === unlockedLimit && furthestCompleted >= 0
+          ? "status-current"
+          : "status-unlocked";
+        statusText = index === unlockedLimit && furthestCompleted >= 0
+          ? "Siguiente reto"
+          : "Desbloqueado";
+      }
+
+      const locked = index > unlockedLimit;
+
+      card.innerHTML = `
+        <h4>${level.name}</h4>
+        <p>Estrellas: <span class="stars">${stars}</span></p>
+        <p><span class="status-label ${statusClass}">${statusText}</span></p>
+      `;
+
+      const btn = document.createElement("button");
+      btn.textContent = locked ? "Bloqueado" : "Jugar aquí";
+      btn.className = "primary";
+      btn.disabled = locked;
+      btn.onclick = () => {
+        if (!locked) {
+          jumpToLevel(index);
+          enterLevelFromMap();
+        }
+      };
+
+      card.appendChild(btn);
+      grid.appendChild(card);
+    });
+  }
+
+  function jumpToLevel(index) {
+    currentLevelIndex = index;
+    currentQuestionIndex = 0;
+    errorsThisLevel = 0;
+    updateLevelLabel();
+    showStory();
+    showQuestion();
+    updateProgressBar();
+  }
+
+  // ------------------------
+  // Selección de personaje
+  // ------------------------
+
+  function chooseCharacter(type) {
+    selectedCharacter = type;
+    $("charName").textContent = `Agente ${playerName} – ${characters[selectedCharacter].name}`;
+    updateCharacterPreview();
+  }
+
+  function updateCharacterPreview() {
+    const data = characters[selectedCharacter];
+
+    if ($("selectedCharacterLabel")) {
+      $("selectedCharacterLabel").textContent = data.name;
+    }
+
+    const spCard = $("char-spiderman");
+    const hCard = $("char-harley");
+    if (spCard && hCard) {
+      spCard.classList.toggle("selected", selectedCharacter === "spiderman");
+      hCard.classList.toggle("selected", selectedCharacter === "harley");
+    }
+
+    const avatarGame = $("gameAvatarImg");
+    if (avatarGame) {
+      avatarGame.src = data.img;
+      avatarGame.alt = data.name;
+    }
+  }
+</script>
+</body>
+</html>
