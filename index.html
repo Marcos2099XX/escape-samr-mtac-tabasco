@@ -171,6 +171,36 @@
       flex-wrap: wrap;
     }
 
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .top-actions-panel {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .top-actions-toggle {
+      display: none;
+    }
+
+    .icon-btn {
+      border: 1px solid rgba(148,163,184,0.5);
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      color: #011627;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      box-shadow: 0 3px 10px rgba(15,23,42,0.8);
+    }
+
     .level-info {
       font-size: 0.9rem;
     }
@@ -205,9 +235,20 @@
       border-left: 3px solid #ec4899;
     }
 
+    .story-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+      color: #f0abfc;
+    }
+
     .question-title {
       font-weight: 600;
       margin-bottom: 6px;
+    }
+
+    .question-box {
+      border-left: 3px solid #6366f1;
     }
 
     .feedback-box.correct {
@@ -514,6 +555,25 @@
         width: 100%;
         text-align: center;
       }
+
+      .top-actions-toggle {
+        display: inline-block;
+        width: auto;
+      }
+
+      .top-actions-panel {
+        display: none;
+      }
+
+      .top-actions-panel.open {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .icon-btn {
+        width: 34px;
+        height: 34px;
+      }
     }
   </style>
 </head>
@@ -529,13 +589,18 @@
 
     <div class="story-box">
       <p>
-        Una tormenta eléctrica ha dejado incomunicado el complejo de investigación <strong>“La Zona Roja de Tabasco”</strong>. 
+        Una tormenta eléctrica ha dejado incomunicado el complejo de investigación <strong>“La Zona Roja de Tabasco”</strong>.
         Como estudiante de la <strong>MTAC</strong>, estás participando en una estancia académica… hasta que todo se sale de control.
       </p>
-      <p>
-        Los sistemas de seguridad bloquean las salidas y aparece un mensaje en la pantalla central:
-        <em>“Solo quienes comprendan el modelo SAMR podrán desbloquear las puertas”.</em>
-      </p>
+      <div id="startStoryExtra" class="hidden">
+        <p>
+          Los sistemas de seguridad bloquean las salidas y aparece un mensaje en la pantalla central:
+          <em>“Solo quienes comprendan el modelo SAMR podrán desbloquear las puertas”.</em>
+        </p>
+      </div>
+      <div class="actions" style="justify-content:flex-start; margin-top:8px;">
+        <button class="secondary" id="startStoryToggleBtn" onclick="toggleStartStory()">Leer más</button>
+      </div>
     </div>
 
     <div class="character-panel">
@@ -553,9 +618,12 @@
 
     <button class="primary" onclick="startGame()">Comenzar misión</button>
 
-    <div class="glosario small" style="margin-top:16px;">
+    <div class="actions" style="justify-content:flex-start; margin-top:12px;">
+      <button class="secondary" id="toggleDocNoteBtn" onclick="toggleDocNote()">Ver nota para docentes</button>
+    </div>
+    <div id="docNoteBox" class="glosario small hidden" style="margin-top:8px;">
       <strong>Nota para docentes:</strong><br>
-      Este juego trabaja el modelo SAMR (definición, niveles y ventajas) a través de 
+      Este juego trabaja el modelo SAMR (definición, niveles y ventajas) a través de
       preguntas de opción múltiple, verdadero/falso y casos prácticos. Ideal para estudiantes de universidad (MTAC).
     </div>
   </section>
@@ -623,9 +691,13 @@
       <div class="progress-container" title="Progreso de escape">
         <div id="progressBar" class="progress-bar"></div>
       </div>
-      <div>
-        <button class="secondary" onclick="openLevelMenu()">Mapa de niveles</button>
-        <button class="secondary" onclick="toggleGlosario()">Ayuda / Glosario</button>
+      <div class="top-actions">
+        <button type="button" class="secondary top-actions-toggle" id="actionsToggleBtn" onclick="toggleActionsPanel()">Acciones ▾</button>
+        <div id="actionsPanel" class="top-actions-panel">
+          <button class="secondary" onclick="openLevelMenu()">Mapa de niveles</button>
+          <button class="secondary" onclick="toggleGlosario()">Ayuda / Glosario</button>
+        </div>
+        <button class="icon-btn" id="musicToggleBtn" onclick="toggleMusic()" title="Música">🔇</button>
       </div>
     </div>
 
@@ -666,6 +738,7 @@
 
     <div class="actions">
       <button class="secondary hidden" id="repeatLevelBtn" onclick="repeatLevel()">Repetir nivel</button>
+      <button class="secondary hidden" id="goToMapBtn" onclick="backToWorldMap()">Mapa del mundo</button>
       <button class="primary" id="nextBtn" onclick="nextStep()">Responder</button>
     </div>
 
@@ -855,7 +928,7 @@
         {
           type: "case",
           title: "Planificación docente",
-          text: "Como estudiante de la MTAC, diseñas una actividad donde los alumnos primero digitalizan un texto (S/A) y luego crean un proyecto multimedia colaborativo que se comparte más allá del aula. ¿Cómo te ayuda SAMR en este proceso?",
+          text: "Como estudiante de la MTAC, diseñas una actividad donde los alumnos primero digitalizan un texto (Sustitución o Aumento) y luego crean un proyecto multimedia colaborativo que se comparte más allá del aula. ¿Cómo te ayuda SAMR en este proceso?",
           options: [
             "Solo sirve para saber cuántas computadoras usar.",
             "Permite planear un progreso desde usos básicos hasta tareas más transformadoras con tecnología.",
@@ -889,6 +962,10 @@
   let waitingNextQuestion = false;
   let furthestCompleted = -1; // índice del último nivel COMPLETADO
   let selectedCharacter = "spiderman";
+  let audioInitialized = false;
+  let musicEnabled = false;
+  let sfx = { levelComplete: null, correct: null, incorrect: null };
+  let music = null;
 
   function $(id) {
     return document.getElementById(id);
@@ -923,6 +1000,17 @@
     renderWorldLevelGrid();
     renderLevelMenu();
     updateCharacterPreview();
+
+    if (!audioInitialized) {
+      initAudio();
+      audioInitialized = true;
+    }
+    const musicBtn = $("musicToggleBtn");
+    if (musicBtn) { musicBtn.textContent = "🔇"; musicBtn.title = "Música: OFF"; }
+    const actionsPanel = $("actionsPanel");
+    if (actionsPanel && window.matchMedia && window.matchMedia('(max-width: 480px)').matches) {
+      actionsPanel.classList.remove('open');
+    }
   }
 
   function backToStart() {
@@ -946,6 +1034,15 @@
     updateProgressBar();
   }
 
+  function backToWorldMap() {
+    $("screen-game").classList.add("hidden");
+    $("screen-map").classList.remove("hidden");
+    $("mapPlayerName").textContent = playerName;
+    renderWorldLevelGrid();
+    renderLevelMenu();
+    updateCharacterPreview();
+  }
+
   // ------------------------
   // Lógica del juego
   // ------------------------
@@ -955,7 +1052,9 @@
   }
 
   function showStory() {
-    $("storyBox").textContent = levels[currentLevelIndex].story;
+    const text = levels[currentLevelIndex].story;
+    $("storyBox").innerHTML = `<div class="story-title">Historia</div><p>${text}</p>`;
+    $("storyBox").classList.remove("hidden");
   }
 
   function showQuestion() {
@@ -983,6 +1082,7 @@
     $("feedbackBox").classList.remove("correct", "incorrect");
     $("nextBtn").textContent = "Responder";
     $("repeatLevelBtn").classList.add("hidden");
+    $("goToMapBtn").classList.add("hidden");
     $("levelSummary").classList.add("hidden");
   }
 
@@ -1021,11 +1121,13 @@
     const isCorrect = selectedOptionIndex === question.correctIndex;
     if (isCorrect) {
       showFeedback("¡Correcto! Has superado este reto.", true);
+      playCorrect();
       waitingNextQuestion = true;
       $("nextBtn").textContent = "Siguiente";
     } else {
       errorsThisLevel++;
       showFeedback(question.hintOnWrong, false);
+      playIncorrect();
       // misma pregunta, intentos ilimitados
     }
   }
@@ -1086,6 +1188,7 @@
     `;
 
     $("repeatLevelBtn").classList.remove("hidden");
+    $("goToMapBtn").classList.remove("hidden");
 
     if (currentLevelIndex < levels.length - 1) {
       $("nextBtn").textContent = "Siguiente nivel";
@@ -1097,6 +1200,7 @@
     updateProgressBar(true);
     renderLevelMenu();
     renderWorldLevelGrid();
+    playLevelComplete();
   }
 
   function repeatLevel() {
@@ -1120,27 +1224,16 @@
     }
   }
 
-  // Progreso basado en el nivel más lejano completado
   function updateProgressBar(endOfLevel = false) {
-    const totalLevels = levels.length;
-    let baseCompleted = (furthestCompleted + 1) / totalLevels;
-    if (furthestCompleted < 0) baseCompleted = 0;
-
-    let percent;
-    if (currentLevelIndex > furthestCompleted) {
-      const level = levels[currentLevelIndex];
-      let levelProgress = currentQuestionIndex / level.questions.length;
-      if (endOfLevel) levelProgress = 1;
-      percent = (baseCompleted + levelProgress / totalLevels) * 100;
-    } else {
-      percent = baseCompleted * 100;
+    const level = levels[currentLevelIndex];
+    let percent = 0;
+    if (level && level.questions && level.questions.length > 0) {
+      percent = endOfLevel ? 100 : (currentQuestionIndex / level.questions.length) * 100;
     }
-
     if (percent > 100) percent = 100;
     if (percent < 0) percent = 0;
-
     $("progressBar").style.width = Math.round(percent) + "%";
-    $("progressBar").title = `Progreso de escape: ${Math.round(percent)}%`;
+    $("progressBar").title = `Progreso del nivel: ${Math.round(percent)}%`;
   }
 
   // ------------------------
@@ -1194,6 +1287,11 @@
   function toggleGlosario() {
     $("glosarioBox").classList.toggle("hidden");
   }
+  function toggleActionsPanel() {
+    const panel = $("actionsPanel");
+    if (!panel) return;
+    panel.classList.toggle("open");
+  }
 
   function showGlosarioFinal() {
     $("finalGlosario").classList.toggle("hidden");
@@ -1215,6 +1313,30 @@
     updateProgressBar();
     renderLevelMenu();
     renderWorldLevelGrid();
+  }
+
+  function toggleStartStory() {
+    const box = $("startStoryExtra");
+    const btn = $("startStoryToggleBtn");
+    const willShow = box.classList.contains("hidden");
+    box.classList.toggle("hidden");
+    if (btn) btn.textContent = willShow ? "Ocultar" : "Leer más";
+  }
+
+  function toggleDocNote() {
+    const box = $("docNoteBox");
+    const btn = $("toggleDocNoteBtn");
+    const willShow = box.classList.contains("hidden");
+    box.classList.toggle("hidden");
+    if (btn) btn.textContent = willShow ? "Ocultar nota" : "Ver nota para docentes";
+  }
+
+  function toggleStory() {
+    const box = $("storyBox");
+    const btn = $("toggleStoryBtn");
+    const willShow = box.classList.contains("hidden");
+    box.classList.toggle("hidden");
+    if (btn) btn.textContent = willShow ? "Ocultar historia" : "Mostrar historia";
   }
 
   // ------------------------
@@ -1374,6 +1496,33 @@
       avatarGame.alt = data.name;
     }
   }
+  function initAudio() {
+    const toDirect = (id) => `https://drive.google.com/uc?export=download&id=${id}`;
+    sfx.levelComplete = new Audio(toDirect("1bQ8HW5P1UUYqLlhbVse6gkOueRqBeyBn"));
+    sfx.correct = new Audio(toDirect("1cAfhjKc-sYOx_WsSGFho6Syw2f6b7OVF"));
+    sfx.incorrect = new Audio(toDirect("1Ps97wZwqnw53DX5EGUUwzDrie_7NiWj1"));
+    [sfx.levelComplete, sfx.correct, sfx.incorrect].forEach(a => { if (a) { a.crossOrigin = "anonymous"; a.volume = 0.8; } });
+    music = new Audio(toDirect("1L0pS_9R2p5AsZG_EZGfKcJrMwlTvBTL9"));
+    music.crossOrigin = "anonymous";
+    music.loop = true;
+    music.volume = 0.4;
+  }
+
+  function toggleMusic() {
+    musicEnabled = !musicEnabled;
+    const btn = $("musicToggleBtn");
+    if (btn) { btn.textContent = musicEnabled ? "🎵" : "🔇"; btn.title = musicEnabled ? "Música: ON" : "Música: OFF"; }
+    if (!music) return;
+    if (musicEnabled) {
+      try { music.currentTime = 0; music.play(); } catch (_) {}
+    } else {
+      try { music.pause(); } catch (_) {}
+    }
+  }
+
+  function playCorrect() { try { if (sfx.correct) { sfx.correct.currentTime = 0; sfx.correct.play(); } } catch (_) {} }
+  function playIncorrect() { try { if (sfx.incorrect) { sfx.incorrect.currentTime = 0; sfx.incorrect.play(); } } catch (_) {} }
+  function playLevelComplete() { try { if (sfx.levelComplete) { sfx.levelComplete.currentTime = 0; sfx.levelComplete.play(); } } catch (_) {} }
 </script>
 </body>
 </html>
